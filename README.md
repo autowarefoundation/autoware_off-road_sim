@@ -260,7 +260,7 @@ vehicles:
 
 This setup connects a remote **PC** or **Jetson** running the **Autoware** or **RoboRacer** autonomy stack to the Isaac Sim environment running on the **simulation PC** over a **LAN or WiFi** network. The remote PC or Jetson receives simulated sensor data and publishes drive commands back to the simulator, identical to how it would behave on a physical car.
 
-> **WiFi note:** WiFi is supported but introduces variable latency and occasional packet loss. Use a dedicated 5 GHz access point with no other clients, or prefer wired Ethernet for high-frequency sensor streams (LiDAR, camera). The simulator's 150 ms command timeout will trigger a safety stop if commands are delayed — consider raising it for unreliable networks.
+> **WiFi note:** WiFi is supported but introduces variable latency and occasional packet loss. Use a dedicated 5 GHz access point with no other clients, or prefer wired Ethernet for high-frequency sensor streams (LiDAR, camera). The simulator's 150 ms command timeout will trigger a safety stop if commands are delayed.
 
 #### Network Topology
 
