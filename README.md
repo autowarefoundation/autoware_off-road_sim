@@ -238,21 +238,19 @@ vehicles:
   - name: "Ego_Vehicle"
     enabled: true
     asset: "assets/vehicles/roboracer_max.usd"
-    ackermann_topic: "/ego/drive"
     topic_prefix: "/ego"
     spawn_position: [0.0, 0.0, 0.0]
-    spawn_orientation: [0.0, 0.0, 0.0]
+    spawn_orientation: [0.0, 0.0, -90.0]
     enable_camera: true
     enable_lidar: true
     enable_gnss: true
 
   - name: "Opponent_Vehicle"
-    enabled: true                          # ← set to true to activate
+    enabled: false
     asset: "assets/vehicles/roboracer_max.usd"
-    ackermann_topic: "/opponent/drive"
     topic_prefix: "/opponent"
-    spawn_position: [10.0, 0.0, 0.0]      # Spawn 10m ahead of Ego
-    spawn_orientation: [0.0, 0.0, 0.0]
+    spawn_position: [-2.0, 0.0, 0.0]
+    spawn_orientation: [0.0, 0.0, -90.0]
     enable_camera: true
     enable_lidar: true
     enable_gnss: true
