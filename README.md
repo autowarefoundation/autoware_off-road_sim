@@ -34,6 +34,8 @@ The simulator features a **1/5th-scale RoboRacer-Max** model equipped with a com
 | NVIDIA-Container-Toolkit | [1.14.0+](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
 | Host OS | Ubuntu 22.04+ (any Linux distro with X11 and NVIDIA driver support) |
 
+**Note:** Approximately 45GB of disk space is required for the Docker image and its dependencies.
+
 ---
 
 ## Docker Setup
