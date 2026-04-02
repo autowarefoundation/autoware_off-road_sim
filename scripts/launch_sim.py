@@ -685,9 +685,13 @@ def main():
             "PYTHONPATH":         ("/opt/ros/humble/lib/python3.10/site-packages:"
                                    "/opt/ros/humble/local/lib/python3.10/dist-packages"),
             "AMENT_PREFIX_PATH":  "/opt/ros/humble",
-            "LD_LIBRARY_PATH":    "/opt/ros/humble/lib",
-            "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+            "LD_LIBRARY_PATH":    "/opt/ros/humble/lib:/opt/ros/humble/lib/x86_64-linux-gnu",
             "ROS_DOMAIN_ID":      _drv_os.environ.get("ROS_DOMAIN_ID", "0"),
+            # Inherit RMW from the parent process so drive_bridge uses the same
+            # middleware as the simulator host (defaults to rmw_cyclonedds_cpp
+            # when the parent has it set, which is the normal launch path).
+            **({"RMW_IMPLEMENTATION": _drv_os.environ["RMW_IMPLEMENTATION"]}
+               if "RMW_IMPLEMENTATION" in _drv_os.environ else {}),
             # Forward interface pinning if set (multi-NIC hosts)
             **({"CYCLONEDDS_URI": _drv_os.environ["CYCLONEDDS_URI"]}
                if "CYCLONEDDS_URI" in _drv_os.environ else {}),
@@ -1924,7 +1928,7 @@ def main():
             # In TELEOP mode the ROS2 bridge is never consulted — only keyboard runs.
             if _mode == "ROS2_CONTROL":
                 _drv = _drive_cmds.get(_ctrl_veh)
-                _ext = _drv if (_drv and (time.monotonic() - float(_drv["stamp"])) < 0.15) else None
+                _ext = _drv if (_drv and (time.monotonic() - float(_drv["stamp"])) < 0.5) else None
             else:
                 _ext = None
             if _ctrl_veh == selected_vehicle_name:
@@ -1957,22 +1961,23 @@ def main():
                             try:
                                 og.Controller.set(og.Controller.attribute(f"{_meta['sub_tick_path']}.inputs:enabled"), _sub_active)
                             except Exception: pass
-                        # Disconnect subscriber→controller data connections in TELEOP so
-                        # stale ROS2 values on the connection cannot override keyboard input.
-                        # Reconnect in ROS2 mode to restore external drive authority.
+                        # Always keep subscriber→controller connections disconnected.
+                        # The SubscribeAckermannDrive node is event-driven: its outputs
+                        # reset to 0 on every tick without a new message, which overrides
+                        # og.Controller.set() authored values even when the tick is disabled.
+                        # The physics loop drives the controller via og.Controller.set()
+                        # every tick from the _drive_cmds cache, so the connection is never
+                        # needed and only causes the value/0 toggle at the publish frequency.
                         for _sc_src, _sc_dst in (_meta.get("sub_ctrl_connections") or []):
                             try:
-                                if _mode == "KEYBOARD_CONTROL":
-                                    og.Controller.disconnect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
-                                else:
-                                    og.Controller.connect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
+                                og.Controller.disconnect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
                             except Exception: pass
                         if _meta.get("sub_topic_attr"):
                             og.Controller.set(og.Controller.attribute(_meta["sub_topic_attr"]), _new_sub)
                         _pub_routed_mode[_ctrl_veh] = _mode
                         if _mode == "ROS2_CONTROL":
                             _just_switched_to_ros2 = True
-                        print(f"\n[Control] {_ctrl_veh}: {'disconnected' if _mode == 'KEYBOARD_CONTROL' else 'reconnected'} subscriber→controller ({_mode})")
+                        print(f"\n[Control] {_ctrl_veh}: routed to {_mode}")
                     except Exception as _rr_e:
                         print(f"\n[Teleop] {_ctrl_veh}: failed to reroute: {_rr_e}")
                 if _mode == "KEYBOARD_CONTROL":
@@ -2006,17 +2011,14 @@ def main():
                         except Exception: pass
                     for _sc_src, _sc_dst in (_meta.get("sub_ctrl_connections") or []):
                         try:
-                            if _mode == "KEYBOARD_CONTROL":
-                                og.Controller.disconnect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
-                            else:
-                                og.Controller.connect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
+                            og.Controller.disconnect(og.Controller.attribute(_sc_src), og.Controller.attribute(_sc_dst))
                         except Exception: pass
                     if _meta.get("sub_topic_attr"):
                         og.Controller.set(og.Controller.attribute(_meta["sub_topic_attr"]), _new_sub)
                     _pub_routed_mode[_ctrl_veh] = _mode
                     if _mode == "ROS2_CONTROL":
                         _just_switched_to_ros2 = True
-                    print(f"\n[Control] {_ctrl_veh}: {'disconnected' if _mode == 'KEYBOARD_CONTROL' else 'reconnected'} subscriber→controller ({_mode})")
+                    print(f"\n[Control] {_ctrl_veh}: routed to {_mode}")
                 except Exception as _rr_e:
                     print(f"\n[Teleop] {_ctrl_veh}: failed to reroute: {_rr_e}")
 

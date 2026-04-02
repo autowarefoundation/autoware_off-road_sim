@@ -83,7 +83,7 @@ Example: To run RoboRacer-Max on pumptrack_simple demo
 /root/isaacsim/_build/linux-x86_64/release/python.sh scripts/launch_sim.py --config scripts/configs/pumptrack_simple_config.yaml
 ```
 
-**Note:** Shader compilation takes several minutes on first launch. Once the status line `[KEYBOARD_CONTROL] ACTIVE: Ego_Vehicle | Spd=+0.00, Str=+0.00` appears in the terminal, the simulation is fully loaded and ready to use.
+**Note:** Shader compilation takes several minutes on first launch. Isaac Sim can feel unresponsive during this time.
 
 **Note:** There are two `[Error] [omni.physicsschema.plugin] Joint body relationship points to a non existent prim, joint will not be created.` messages at launch. These errors do not affect the simulation and can be ignored for now.
 
