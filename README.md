@@ -169,8 +169,6 @@ Each vehicle exposes two separate command topics — one per message type. The v
 | Opponent | `/opponent/control` | `autoware_control_msgs/Control` | Autoware |
 | Opponent | `/opponent/drive` | `ackermann_msgs/AckermannDriveStamped` | RoboRacer / F1TENTH |
 
-**How `/ego/control` works:** `isaacsim_drive_bridge` (running as a Python 3.10 subprocess) subscribes to `/ego/control`, extracts `longitudinal.velocity` and `lateral.steering_tire_angle`, and republishes them as `AckermannDriveStamped` on `/ego/drive` so the built-in OmniGraph subscriber receives the command.
-
 ### Sensor Outputs (after remapping)
 
 | Sensor | Ego Topic | Opponent Topic | Message Type |
