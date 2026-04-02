@@ -70,7 +70,7 @@ This automatically:
 
 ## Running the Simulation
 
-**Always use the custom Python interpreter** bundled with Isaac Sim — standard `python3` does not have the `omni.*` packages.
+Always use the custom Python interpreter bundled with Isaac Sim — standard `python3` does not have the `omni.*` packages.
 
 Inside the container:
 
