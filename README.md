@@ -215,15 +215,15 @@ Click inside the Isaac Sim viewport, then hold `1` (Ego) or `2` (Opponent) for â
 In another terminal inside the container (see **Attach a New Terminal to a Running Container**):
 
 ```bash
-ros2 topic pub --rate 10 /ego/control autoware_control_msgs/msg/Control \
-  '{longitudinal: {velocity: 3.0, acceleration: 1.0}, lateral: {steering_tire_angle: 0.5}}'
+ros2 topic pub --rate 15 /ego/control autoware_control_msgs/msg/Control \
+  '{longitudinal: {velocity: 2.0, acceleration: 1.0}, lateral: {steering_tire_angle: 0.5}}'
 ```
 
 or
 
 ```bash
-ros2 topic pub --rate 10 /ego/drive ackermann_msgs/msg/AckermannDriveStamped \
-  '{drive: {speed: 3.0, steering_angle: 0.5}}'
+ros2 topic pub --rate 15 /ego/drive ackermann_msgs/msg/AckermannDriveStamped \
+  '{drive: {speed: 2.0, steering_angle: 0.5}}'
 ```
 
 
