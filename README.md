@@ -131,7 +131,7 @@ Each vehicle has an independent control mode toggled by holding `1` / `2` for �
 - **KEYBOARD_CONTROL** — keyboard drives the vehicle (WASD / arrow keys). ROS 2 commands on the drive/control topics are ignored.
 - **ROS2_CONTROL** — the vehicle is driven exclusively by incoming `autoware_control_msgs/Control` or `AckermannDriveStamped` messages. Keyboard input is ignored. If no fresh ROS 2 command is received, the vehicle holds at speed 0.
 
-The active mode for each vehicle is shown in the viewport overlay and in the terminal status line.
+The active mode for each vehicle is shown in the viewport HUD and in the terminal status line.
 
 ---
 
