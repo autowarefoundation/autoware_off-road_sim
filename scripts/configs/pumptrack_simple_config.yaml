@@ -29,6 +29,16 @@ environment:
   scale: [0.01, 0.01, 0.01]
   rotation_euler: [90.0, 0.0, -90.0]
   translation: [0.0, 0.0, 0.0]
+  frictions:
+    - name: "TirePhysicsMaterial"
+      dynamic_friction: 1.0
+      static_friction: 1.0
+    - name: "AsphaltPhysicsMaterial"
+      dynamic_friction: 0.7
+      static_friction: 0.9
+    - name: "GrassPhysicsMaterial"
+      dynamic_friction: 0.4
+      static_friction: 0.6
 
 vehicles:
   - name: "Ego_Vehicle"

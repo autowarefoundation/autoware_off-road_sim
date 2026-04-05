@@ -321,6 +321,34 @@ def main():
         except Exception as _e:
             print(f"[Physics] Warning: Could not set articulation iterations: {_e}")
 
+    # Apply friction overrides from config
+    friction_cfgs = config.get("environment", {}).get("frictions", [])
+    if friction_cfgs:
+        try:
+            from pxr import UsdPhysics
+            _stage = omni.usd.get_context().get_stage()
+            for fc in friction_cfgs:
+                mat_name = fc.get("name", "")
+                dyn = fc.get("dynamic_friction")
+                sta = fc.get("static_friction")
+                for prim in _stage.Traverse():
+                    if prim.GetName() == mat_name:
+                        mat_api = UsdPhysics.MaterialAPI(prim)
+                        if not mat_api:
+                            mat_api = UsdPhysics.MaterialAPI.Apply(prim)
+                        if dyn is not None:
+                            attr = prim.GetAttribute("physics:dynamicFriction")
+                            if attr: attr.Set(float(dyn))
+                            else: prim.CreateAttribute("physics:dynamicFriction", Sdf.ValueTypeNames.Float).Set(float(dyn))
+                        if sta is not None:
+                            attr = prim.GetAttribute("physics:staticFriction")
+                            if attr: attr.Set(float(sta))
+                            else: prim.CreateAttribute("physics:staticFriction", Sdf.ValueTypeNames.Float).Set(float(sta))
+                        print(f"[Friction] {mat_name} -> dynamic={dyn}, static={sta}")
+                        break
+        except Exception as _fe:
+            print(f"[Friction] Warning: Could not apply friction overrides: {_fe}")
+
     # Enable ROS2 and Core nodes with defensive discovery to avoid version conflicts
     import omni.kit.app
     ext_manager = omni.kit.app.get_app().get_extension_manager()
@@ -1419,9 +1447,9 @@ def main():
         C_ORANGE = 0xFF4488FF   # orange       (R=0xFF G=0x88 B=0x44 A=0xFF)
         C_BLUE   = 0xFFFF8800   # dodger blue  (R=0x00 G=0x88 B=0xFF A=0xFF)
         
-        CARD_W = 190
-        CARD_H = 430
-        GAP    = 16
+        CARD_W = 228
+        CARD_H = 516
+        GAP    = 19
 
         enabled_vehicles = [v for v in vehicles if v.get("enabled", True)]
         # In split-screen mode the main (left) window shows only the Ego vehicle.
@@ -1451,16 +1479,7 @@ def main():
         SPACER_SM   = max(1,   int(4   * _sc))
 
         total_w = CARD_W + 16
-        _ip_bar_h = FONT_ROW + CARD_MARGIN * 2
-        try:
-            import socket as _sock
-            _s = _sock.socket(_sock.AF_INET, _sock.SOCK_DGRAM)
-            _s.connect(("8.8.8.8", 80))
-            _local_ip = _s.getsockname()[0]
-            _s.close()
-        except Exception:
-            _local_ip = "?"
-        total_h = (CARD_H + GAP) * _n_veh + _ip_bar_h + GAP + 16
+        total_h = CARD_H * _n_veh + GAP * (_n_veh - 1) + 16
 
         hud_window = ui.Window(
             "VehicleStatusHUD",
@@ -1539,15 +1558,6 @@ def main():
 
                     hud_labels[veh_name] = models
 
-                # IP address card — embedded at the bottom of the vehicle HUD
-                with ui.ZStack(width=CARD_W, height=_ip_bar_h):
-                    ui.Rectangle(style={"background_color": 0x55383838, "border_radius": 8})
-                    with ui.HStack(margin=CARD_MARGIN):
-                        ui.Label("IP ADDRESS:", style={"color": C_WHITE, "font_size": FONT_ROW},
-                                 width=LABEL_W + INDENT_W)
-                        ui.Label(_local_ip, style={"color": C_WHITE, "font_size": FONT_ROW},
-                                 width=ui.Fraction(1))
-
         print("[HUD] Viewport overlay window created.")
 
         # ── Opponent HUD window (split-screen right side) ─────────────────────
@@ -1624,8 +1634,6 @@ def main():
                 print(f"[HUD] Opponent HUD window created at x={_opp_x}.")
             except Exception as _opp_err:
                 print(f"[HUD] Opponent HUD creation error: {_opp_err}")
-
-        print(f"[HUD] IP address: {_local_ip}")
 
     except Exception as e:
         HUD_ENABLED = False

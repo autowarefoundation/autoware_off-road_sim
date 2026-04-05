@@ -20,10 +20,13 @@ To refer to full Isaac Sim documentation, visit [Isaac Sim Documentation](https:
 6. [ROS 2 Topics](#ros-2-topics)
 7. [Control Interface](#control-interface)
 8. [Multi-Vehicle Setup](#multi-vehicle-setup)
-9. [Semantic Segmentation Dataset Recording](#semantic-segmentation-dataset-recording)
-10. [Performance Tuning](#performance-tuning)
-11. [Utility Scripts](#utility-scripts)
-12. [Troubleshooting](#troubleshooting)
+9. [Distributed Mode and Hardware-in-the-Loop (HIL) Testing](#distributed-mode-and-hardware-in-the-loop-hil-testing)
+10. [Surface Friction](#surface-friction)
+11. [Semantic Segmentation Dataset Recording](#semantic-segmentation-dataset-recording)
+12. [Performance Tuning](#performance-tuning)
+13. [Utility Scripts](#utility-scripts)
+14. [Troubleshooting](#troubleshooting)
+15. [License](#license)
 
 ---
 
@@ -197,7 +200,6 @@ Each enabled vehicle has a semi-transparent HUD card in the top-left corner of i
 - **ODOMETRY** — position (X/Y/Z), linear velocity, angular velocity
 - **IMU** — linear acceleration, angular acceleration
 - **GNSS** — latitude and longitude
-- **IP ADDRESS** — local machine IP (useful when connecting a remote ROS 2 stack)
 
 Press `/` to toggle all HUD windows on or off.
 
@@ -344,11 +346,13 @@ vehicles:
     enable_gnss: true
 ```
 
-### Distributed Mode and Hardware-in-the-Loop (HIL) Testing
+---
+
+## Distributed Mode and Hardware-in-the-Loop (HIL) Testing
 
 This setup connects a remote **PC** or **Jetson** running the **Autoware** or **RoboRacer** autonomy stack to the Isaac Sim environment running on the **simulation PC** over a **LAN or WiFi** network. This allows the autonomy stack to run on a different machine than the simulation environment, saving the simulation PC's resources for simulation.
 
-> **WiFi note:** WiFi is supported but introduces variable latency. Use a dedicated 5 GHz access point, or prefer wired Ethernet for high-frequency sensor streams (LiDAR, camera).
+> **Note:** WiFi is supported but introduces variable latency. Use a dedicated 5 GHz access point, or prefer wired Ethernet for high-frequency sensor streams (LiDAR, camera).
 
 The stack uses **CycloneDDS** (`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`), matching Autoware's default middleware. CycloneDDS auto-discovers peers via multicast — no discovery server is needed.
 
@@ -391,11 +395,9 @@ Launch as usual. CycloneDDS starts automatically and you will see:
 
 > **Multi-NIC hosts:** If the simulation PC has both Ethernet and WiFi, set `network_interface: "eth0"` (or the relevant interface name / IP) to ensure CycloneDDS binds to the correct adapter.
 
-> **In-sim IP display:** Once the simulator is running, the local LAN IP address of the simulation PC is shown at the bottom of the HUD overlay (`IP ADDRESS: xxx.xxx.xxx.xxx`). Use this address when configuring the remote Autoware / Jetson PC — no need to run `ifconfig` separately.
-
 #### Step 2 — Configure the remote PC or Jetson
 
-No XML profiles needed. Just set two environment variables before launching your autonomy stack:
+CycloneDDS auto-discovers peers on the same subnet using UDP multicast. Just set two environment variables before launching your autonomy stack:
 
 ```bash
 export ROS_DOMAIN_ID=0
@@ -404,6 +406,7 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 # Then launch your stack (example):
 ros2 launch f1tenth_stack bringup_launch.py
 ```
+Ensure the `ROS_DOMAIN_ID` is the same on both the simulation PC and the remote PC/Jetson. Use different `ROS_DOMAIN_ID`s for different simulation instances.
 
 #### Step 3 — Verify Connectivity
 
@@ -422,8 +425,29 @@ ros2 topic echo /ego/drive    # Should show the commands sent by the Jetson
 ```
 
 > **Firewall note:** CycloneDDS uses UDP multicast (239.255.0.1) and unicast. Ensure UDP ports are not blocked: `sudo ufw allow from <remote-ip>` or disable the firewall on the LAN interface.
->
-> **WiFi / no-multicast networks:** If multicast is blocked (e.g. across VLANs), set `network_interface` to the simulation PC's IP on both sides via `CYCLONEDDS_URI`. See the [CycloneDDS docs](https://cyclonedds.io/docs/cyclonedds/latest/config/config_file_reference.html) for the full XML reference.
+
+---
+
+## Surface Friction
+
+Friction values for each physics material in the environment are configured under `environment.frictions` in the config file. Each entry matches a material by its prim name and sets `dynamic_friction` and `static_friction`:
+
+```yaml
+environment:
+  asset: "assets/environments/pumptrack_simple.usd"
+  frictions:
+    - name: "TirePhysicsMaterial"
+      dynamic_friction: 1.0
+      static_friction: 1.0
+    - name: "AsphaltPhysicsMaterial"
+      dynamic_friction: 0.7
+      static_friction: 0.9
+    - name: "GrassPhysicsMaterial"
+      dynamic_friction: 0.4
+      static_friction: 0.6
+```
+
+These values are applied to the stage at startup, overriding whatever is baked into the USD asset. Friction calculations are based on the average of the two contacting materials.
 
 ---
 
