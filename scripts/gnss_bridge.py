@@ -35,7 +35,7 @@ rclpy.init()
 _node = Node("isaacsim_gnss_bridge")
 _qos = QoSProfile(
     depth=10,
-    reliability=ReliabilityPolicy.BEST_EFFORT,
+    reliability=ReliabilityPolicy.RELIABLE,
     history=HistoryPolicy.KEEP_LAST,
 )
 _pubs = {}  # topic -> Publisher (created lazily on first message)
