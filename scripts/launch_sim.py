@@ -1302,9 +1302,14 @@ def main():
                 "PYTHONPATH":       ("/opt/ros/humble/lib/python3.10/site-packages:"
                                      "/opt/ros/humble/local/lib/python3.10/dist-packages"),
                 "AMENT_PREFIX_PATH": "/opt/ros/humble",
-                "LD_LIBRARY_PATH":   "/opt/ros/humble/lib",
-                "RMW_IMPLEMENTATION": "rmw_fastrtps_cpp",
+                "LD_LIBRARY_PATH":   "/opt/ros/humble/lib:/opt/ros/humble/lib/x86_64-linux-gnu",
                 "ROS_DOMAIN_ID":     _gnss_os.environ.get("ROS_DOMAIN_ID", "0"),
+                # Match the parent's RMW so all nodes use the same middleware.
+                **({"RMW_IMPLEMENTATION": _gnss_os.environ["RMW_IMPLEMENTATION"]}
+                   if "RMW_IMPLEMENTATION" in _gnss_os.environ else {}),
+                # Forward NIC pinning so the GNSS node binds to the same interface.
+                **({"CYCLONEDDS_URI": _gnss_os.environ["CYCLONEDDS_URI"]}
+                   if "CYCLONEDDS_URI" in _gnss_os.environ else {}),
             }
 
             _gnss_log_path = _gnss_os.path.join(
